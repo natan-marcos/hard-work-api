@@ -20,7 +20,6 @@ namespace HardWorkAPI.Controllers
         }
 
         // WORKOUTS BASICS
-
         [HttpGet("all")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll()
