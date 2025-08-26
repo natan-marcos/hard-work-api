@@ -1,4 +1,4 @@
-﻿# ⚠️ Importante: Configuração do appsettings.Development.json
+﻿# Importante: Configuração do appsettings.Development.json
 
 Para rodar a API corretamente, é necessário criar o arquivo `appsettings.Development.json` na raiz do projeto. Sem esse arquivo, a aplicação **não funcionará**.
 
