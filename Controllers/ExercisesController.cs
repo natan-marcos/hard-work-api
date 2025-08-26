@@ -3,6 +3,7 @@ using HardWorkAPI.DTOs;
 using HardWorkAPI.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HardWorkAPI.Controllers
 {
@@ -33,6 +34,7 @@ namespace HardWorkAPI.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create(CreateExerciseDto exerciseDto)
         {
             Exercise exercise = new Exercise
@@ -50,6 +52,7 @@ namespace HardWorkAPI.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Update(long id, UpdateExerciseDto exerciseDto)
         {
             Exercise? exercise = _context.Exercises.Find(id);
@@ -66,6 +69,7 @@ namespace HardWorkAPI.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(long id)
         {
             Exercise? exercise = _context.Exercises.Find(id);
