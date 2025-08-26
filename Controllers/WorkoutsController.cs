@@ -87,8 +87,56 @@ namespace HardWorkAPI.Controllers
             return CreatedAtRoute("GetWorkoutById", new { id = workout.Id }, workout);
         }
 
-        // WORKOUTS EXERCISES
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Trainer, Admin")]
+        public async Task<IActionResult> Update(long id, UpdateWorkoutDto workoutDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
 
+            if (!long.TryParse(userId, out var userIdLong))
+                return BadRequest(new { message = "Invalid user ID" });
+
+            var workout = await _context.Workouts.FindAsync(id);
+            if (workout == null)
+                return NotFound(new { message = "Workout not found" });
+
+            if (workout.TrainerId != userIdLong && userRole != "Admin")
+                return Forbid();
+
+            workout.Name = workoutDto.Name ?? workout.Name;
+            workout.Description = workoutDto.Description ?? workout.Description;
+
+            _context.Workouts.Update(workout);
+            await _context.SaveChangesAsync();
+
+            return Ok(workout);
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize(Roles = "Trainer, Admin")]
+        public async Task<IActionResult> Delete(long id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            if (!long.TryParse(userId, out var userIdLong))
+                return BadRequest(new { message = "Invalid user ID" });
+
+            var workout = await _context.Workouts.FindAsync(id);
+            if (workout == null)
+                return NotFound(new { message = "Workout not found" });
+
+            if (workout.TrainerId != userIdLong && userRole != "Admin")
+                return Forbid();
+
+            _context.Workouts.Remove(workout);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // WORKOUTS EXERCISES
         [HttpPost("{id}/exercises")]
         [Authorize(Roles = "Trainer, Admin")]
         public async Task<IActionResult> AddExerciseToWorkout(long id, AddExerciseToWorkoutDto exerciseDto)
