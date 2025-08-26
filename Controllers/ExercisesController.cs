@@ -28,7 +28,7 @@ namespace HardWorkAPI.Controllers
         public async Task<IActionResult> GetById(long id)
         {
             Exercise? exercise = await _context.Exercises.FindAsync(id);
-            if (exercise == null) return NotFound();
+            if (exercise == null) return NotFound(new { message = "Exercise not found" });
             return Ok(exercise);
         }
 
@@ -53,7 +53,7 @@ namespace HardWorkAPI.Controllers
         public async Task<IActionResult> Update(long id, UpdateExerciseDto exerciseDto)
         {
             Exercise? exercise = _context.Exercises.Find(id);
-            if (exercise == null) return NotFound();
+            if (exercise == null) return NotFound(new { message = "Exercise not found" });
 
             exercise.Name = exerciseDto.Name ?? exercise.Name;
             exercise.Description = exerciseDto.Description ?? exercise.Description;
@@ -69,7 +69,7 @@ namespace HardWorkAPI.Controllers
         public async Task<IActionResult> Delete(long id)
         {
             Exercise? exercise = _context.Exercises.Find(id);
-            if (exercise == null) return NotFound();
+            if (exercise == null) return NotFound(new { message = "Exercise not found" });
             _context.Exercises.Remove(exercise);
             await _context.SaveChangesAsync();
             return NoContent();

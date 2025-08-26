@@ -37,7 +37,7 @@ namespace HardWorkAPI.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!long.TryParse(userId, out var userIdSafe))
-                return BadRequest("Invalid user ID");
+                return BadRequest(new { message = "Invalid user ID" });
 
             var workouts = await _context.Workouts
                 .Where(w => w.TrainerId == userIdSafe)
@@ -63,7 +63,7 @@ namespace HardWorkAPI.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!long.TryParse(userId, out var userIdSafe))
-                return BadRequest("Invalid user ID");
+                return BadRequest(new { message = "Invalid user ID" });
 
             Workout workout = new Workout
             {
@@ -81,8 +81,16 @@ namespace HardWorkAPI.Controllers
         // WORKOUTS EXERCISES
 
         [HttpPost("{id}/exercises")]
+        [Authorize(Roles = "Trainer, Admin")]
         public async Task<IActionResult> AddExerciseToWorkout(long id, AddExerciseToWorkoutDto exerciseDto)
         {
+            // get user info from token
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            if (!long.TryParse(userId, out var userIdLong))
+                return BadRequest(new { message = "Invalid user ID" });
+
             // get workout from db
             var workout = await _context.Workouts
                 .Include(w => w.WorkoutExercises)
@@ -90,12 +98,16 @@ namespace HardWorkAPI.Controllers
 
             // validate
             if (workout == null)
-                return NotFound("Workout not found");
+                return NotFound(new { message = "Workout not found" });
+
+            // check if user is owner or admin
+            if (workout.TrainerId != userIdLong && userRole != "Admin")
+                return Forbid();
 
             // check if exercise id is valid
             var exercise = await _context.Exercises.FindAsync(exerciseDto.ExerciseId);
             if (exercise == null)
-                return NotFound("Exercise not found");
+                return NotFound(new { message = "Exercise not found" });
 
             var workoutExercise = new WorkoutExercise
             {
@@ -113,10 +125,42 @@ namespace HardWorkAPI.Controllers
             } 
             catch (DbUpdateException ex)
             {
-                return Conflict("This exercise is already added to the workout");
+                return Conflict(new { message = "This exercise is already added to the workout" });
             }
 
-            return Ok("The exercise was added successfully");
+            return Created();
+        }
+
+        [HttpDelete("{workoutId}/exercises/{exerciseId}")]
+        [Authorize(Roles = "Trainer, Admin")]
+        public async Task<IActionResult> RemoveExerciseFromWorkout(long workoutId, long exerciseId)
+        {
+            // get user info from token
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            // parse userId
+            if (!long.TryParse(userId, out var userIdLong))
+                return BadRequest(new { message = "Invalid user ID" });
+
+            // check if workout exists and belongs to the user (if not admin)
+            var workout = await _context.Workouts
+                .FirstOrDefaultAsync(w => w.Id == workoutId && w.TrainerId == userIdLong);
+            if (workout == null && userRole != "Admin")
+                return NotFound(new { message = "Workout not found or does not belong to the user" });
+
+            // get the relation
+            var workoutExercise = await _context.WorkoutExercises
+                .FirstOrDefaultAsync(we => we.WorkoutId == workoutId && we.ExerciseId == exerciseId);
+
+            if (workoutExercise == null)
+                return NotFound(new { message = "Exercise not found in this workout" });
+
+            // remove the relation
+            _context.WorkoutExercises.Remove(workoutExercise);
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // 204
         }
     }
 }

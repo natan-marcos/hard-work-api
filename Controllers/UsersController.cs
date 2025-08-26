@@ -37,7 +37,7 @@ namespace HardWorkAPI.Controllers
 
             // convert to long
             if (!long.TryParse(userId, out var userIdSafe))
-                return BadRequest("Invalid user ID");
+                return BadRequest(new { message = "Invalid user ID" });
 
             // get from db
             var user = await _context.Users
@@ -53,7 +53,7 @@ namespace HardWorkAPI.Controllers
                 .FirstOrDefaultAsync();
 
             if (user == null)
-                return NotFound();
+                return NotFound(new { message = "User not found" });
 
             return Ok(user);
         }
@@ -61,7 +61,7 @@ namespace HardWorkAPI.Controllers
         [HttpGet("{id}", Name = "GetUserById")]
         public async Task<IActionResult> GetById(long id) { 
             User? user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
+            if (user == null) return NotFound(new { message = "User not found" });
 
             return Ok(user);
         }
@@ -91,7 +91,7 @@ namespace HardWorkAPI.Controllers
         public async Task<IActionResult> Update(long id, UpdateUserDto userDto)
         {
             User? user = await _context.Users.FindAsync(id);
-            if (user == null) return NotFound();
+            if (user == null) return NotFound(new { message = "User not found" });
 
             user.Name = userDto.Name ?? user.Name;
             user.Email = userDto.Email ?? user.Email;
@@ -110,7 +110,7 @@ namespace HardWorkAPI.Controllers
         public async Task<IActionResult> Delete(long id)
         {
             User? user = _context.Users.Find(id);
-            if (user == null) return NotFound();
+            if (user == null) return NotFound(new { message = "User not found" });
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 

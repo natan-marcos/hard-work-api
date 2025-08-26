@@ -30,7 +30,7 @@ namespace HardWorkAPI.Controllers
         public async Task<IActionResult> Register(RegisterUserDto userDto)
         {
             if (_context.Users.Any(u => u.Email == userDto.Email))
-                return BadRequest("Email already registered");
+                return BadRequest(new { message = "Email already registered" });
 
             User user = new User
             {
@@ -51,11 +51,11 @@ namespace HardWorkAPI.Controllers
         public IActionResult Login(LoginUserDto userDto)
         {
             var user = _context.Users.SingleOrDefault(u => u.Email == userDto.Email);
-            if (user == null) return Unauthorized("Invalid credentials");
+            if (user == null) return Unauthorized(new { message = "Invalid credentials" });
 
             var result = _hasher.VerifyHashedPassword(user, user.PasswordHash, userDto.Password);
             if (result == PasswordVerificationResult.Failed)
-                return Unauthorized("Invalid credentials");
+                return Unauthorized(new { message = "Invalid credentials" });
 
             // Pegando a key, issuer, audience e tempo de expiração do appsettings.json
             var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
