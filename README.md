@@ -38,7 +38,7 @@ Para rodar a API corretamente, é necessário criar o arquivo `appsettings.Devel
 |--------|-----------------|-------------|----------------------------|
 | GET    | /api/users      | Admin       | List all users             |
 | GET    | /api/users/me   | Any         | Get current user info      |
-| GET    | /api/users/{id} | None        | Get user by id             |
+| GET    | /api/users/{id} | Admin       | Get user by id             |
 | POST   | /api/users      | Admin       | Create user                |
 | PUT    | /api/users/{id} | Admin       | Update user                |
 | DELETE | /api/users/{id} | Admin       | Delete user                |
