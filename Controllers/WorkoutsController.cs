@@ -47,11 +47,20 @@ namespace HardWorkAPI.Controllers
         }
 
         [HttpGet("{id}", Name = "GetWorkoutById")]
+        [Authorize(Roles = "Trainer, Admin")]
         public async Task<IActionResult> GetById(long id)
         {
-            // TODO adicionar autorization
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userRole = User.FindFirstValue(ClaimTypes.Role);
+
+            if (!long.TryParse(userId, out var userIdLong))
+                return BadRequest(new { message = "Invalid user ID" });
+
             Workout? workout = await _context.Workouts.FindAsync(id);
             if (workout == null) return NotFound();
+
+            if (workout.TrainerId != userIdLong && userRole != "Admin")
+                return Forbid();
 
             return Ok(workout);
         }
